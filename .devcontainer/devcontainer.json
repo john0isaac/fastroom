@@ -1,6 +1,8 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
     "name": "FastRoom Dev Container",
-    "image": "mcr.microsoft.com/devcontainers/python:3.12",
+    "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
     "features": {
         "ghcr.io/devcontainers/features/node:1": {
             "version": "22"
@@ -10,22 +12,20 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "ms-python.python",
-                "ms-python.vscode-pylance",
-                "charliermarsh.ruff",
                 "esbenp.prettier-vscode",
-                "dbaeumer.vscode-eslint",
+                "ms-python.python",
+                "charliermarsh.ruff",
+                "ms-ossdata.vscode-pgsql",
                 "Vue.volar",
                 "ms-azuretools.vscode-docker"
             ]
         }
     },
-    "workspaceFolder": "/workspace",
-    "remoteUser": "root",
-    "mounts": [
-        "source=fastroom-workspace,target=/workspace,type=bind,consistency=cached,source=${localWorkspaceFolder}"
-    ],
-    "postCreateCommand": "bash .devcontainer/post-create.sh",
+    "remoteUser": "vscode",
+    "containerEnv": {
+        "UV_LINK_MODE": "copy" // suppress uv hardlinking warnings
+    },
+    "postCreateCommand": ". .devcontainer/post-create.sh",
     "forwardPorts": [8000, 5173, 6379, 5433],
     "portsAttributes": {
         "8000": { "label": "FastAPI" },
@@ -33,7 +33,6 @@
         "6379": { "label": "Redis" },
         "5433": { "label": "Postgres" }
     },
-    "onCreateCommand": "bash .devcontainer/on-create.sh",
     "shutdownAction": "stopContainer",
     "hostRequirements": {
         "memory": "8gb"
