@@ -31,7 +31,7 @@ jobs:
         os: ["ubuntu-latest"]
         python_version: ["3.10", "3.11", "3.12"]
     steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@v5
         - name: Setup python
           uses: actions/setup-python@v5
           with:
@@ -45,13 +45,13 @@ jobs:
           run: |
             cd backend && uv run pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=pytest-junit.xml
         - name: Upload coverage HTML report
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: coverage-html
             path: backend/htmlcov
         - name: Upload JUnit test report
           if: always()
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: junit-test-report
             path: backend/pytest-junit.xml
