@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "FastAPI WebSocket API for FastRoom"
 authors = [{ name = "John Aziz", email = "johnaziz269@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "fastapi[standard-no-fastapi-cloud-cli]==0.116.1",
   "pydantic==2.11.7",
