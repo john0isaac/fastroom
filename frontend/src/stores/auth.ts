@@ -8,16 +8,10 @@ import {
   logoutLogoutPost,
 } from '../generated/openapiclient/sdk.gen';
 import type {
-  LoginForAccessTokenTokenPostData,
   BodyLoginForAccessTokenTokenPost,
   User,
+  TokenPair,
 } from '../generated/openapiclient/types.gen';
-
-interface TokenPair {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-}
 
 const ACCESS_KEY = 'fastroom.access';
 const REFRESH_KEY = 'fastroom.refresh';
@@ -54,11 +48,11 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await registerUserRegisterPost({
         query: { username, password, email, full_name: fullName },
-      } as any);
+      });
       // auto login
       await login(username, password);
-    } catch (e: any) {
-      error.value = e?.message || 'registration failed';
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'registration failed';
       throw e;
     } finally {
       loading.value = false;
@@ -74,11 +68,15 @@ export const useAuthStore = defineStore('auth', () => {
         password,
         grant_type: 'password',
       };
-      const res = await loginForAccessTokenTokenPost({ body: body });
-      setTokens(res.data as any);
+      const res = await loginForAccessTokenTokenPost({ body });
+      const tokenPair = res.data;
+      if (!tokenPair) {
+        throw new Error('No token pair returned');
+      }
+      setTokens(tokenPair);
       await fetchProfile();
-    } catch (e: any) {
-      error.value = e?.message || 'login failed';
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'login failed';
       throw e;
     } finally {
       loading.value = false;
@@ -89,10 +87,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (!refresh.value) return;
     try {
       const res = await refreshTokensRefreshPost({
-        body: { refresh_token: refresh.value } as any,
+        body: { refresh_token: refresh.value },
       });
-      setTokens(res.data as any);
+      if (res.data) setTokens(res.data);
     } catch (e) {
+      console.error('Refresh token failed:', e);
       clear();
     }
   }
@@ -100,20 +99,17 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchProfile() {
     if (!access.value) return;
     try {
-      const res = await readUsersMeUsersMeGet({
-        headers: { Authorization: `Bearer ${access.value}` },
-      });
+      const res = await readUsersMeUsersMeGet();
       if (!res.data) {
         throw new Error('No user data returned');
       }
       user.value = res.data;
     } catch (e) {
+      console.error('Fetch profile failed:', e);
       // maybe expired; try refresh
       await refreshTokens();
       if (access.value) {
-        const res2 = await readUsersMeUsersMeGet({
-          headers: { Authorization: `Bearer ${access.value}` },
-        });
+        const res2 = await readUsersMeUsersMeGet();
         if (!res2.data) {
           throw new Error('No user data returned after refresh');
         }
@@ -126,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (refresh.value) {
       try {
         await logoutLogoutPost({
-          body: { refresh_token: refresh.value } as any,
+          body: { refresh_token: refresh.value },
         });
       } catch {
         // ignore errors (token may already be invalid)

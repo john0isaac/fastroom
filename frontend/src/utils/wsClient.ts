@@ -51,7 +51,7 @@ export class WSClient {
   private reconnectingListeners = new Set<ReconnectListener>();
   private pending: Envelope[] = []; // queue messages until socket OPEN
   private opts: Required<WSClientOptions>;
-  jsonListeners = new Set<(data: any) => void>();
+  jsonListeners = new Set<(data: unknown) => void>();
 
   constructor(
     private url: string,
@@ -71,7 +71,7 @@ export class WSClient {
   }
 
   /** Register a JSON message listener (already parsed). */
-  onJSON(fn: (data: any) => void) {
+  onJSON(fn: (data: unknown) => void) {
     this.jsonListeners.add(fn);
     return () => this.jsonListeners.delete(fn);
   }
@@ -140,13 +140,16 @@ export class WSClient {
     this.ws.onmessage = (ev) => {
       this.msgListeners.forEach((l) => l(ev));
       try {
-        const data = JSON.parse(ev.data);
-        // Adjust heartbeat interval if server suggests one
+        const data = JSON.parse(ev.data) as Record<string, unknown> | unknown;
         if (
-          data.heartbeatInterval &&
-          typeof data.heartbeatInterval === 'number'
+          data &&
+          typeof data === 'object' &&
+          'heartbeatInterval' in data &&
+          typeof (data as Record<string, unknown>).heartbeatInterval ===
+            'number'
         ) {
-          this.hbInterval = data.heartbeatInterval * 1000; // server sends seconds
+          this.hbInterval =
+            (data as Record<string, number>).heartbeatInterval * 1000;
         }
         this.jsonListeners.forEach((l) => l(data));
       } catch {

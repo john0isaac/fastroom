@@ -1,16 +1,16 @@
 <template>
   <div class="page auth">
     <h1>Register</h1>
-    <form @submit.prevent="submit" class="card">
+    <form class="card" @submit.prevent="submit">
       <label>Username<input v-model="username" required /></label>
       <label
         >Password<input
-          type="password"
           v-model="password"
+          type="password"
           required
           minlength="6"
       /></label>
-      <label>Email (optional)<input type="email" v-model="email" /></label>
+      <label>Email (optional)<input v-model="email" type="email" /></label>
       <label>Full Name (optional)<input v-model="fullName" /></label>
       <button class="btn primary" :disabled="auth.loading">
         Create Account

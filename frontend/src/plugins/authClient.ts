@@ -1,6 +1,11 @@
 import { useAuthStore } from '../stores/auth';
 import { client } from '../generated/openapiclient/client.gen';
-import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { AxiosHeaders } from 'axios';
+import type {
+  AxiosError,
+  InternalAxiosRequestConfig,
+  AxiosRequestHeaders,
+} from 'axios';
 
 let installed = false;
 export function installAuthInterceptors() {
@@ -10,8 +15,17 @@ export function installAuthInterceptors() {
   client.instance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       if (auth.access) {
-        (config.headers as any) = config.headers || {};
-        (config.headers as any).Authorization = `Bearer ${auth.access}`;
+        if (!config.headers) {
+          config.headers = new AxiosHeaders();
+        }
+        if (config.headers instanceof AxiosHeaders) {
+          config.headers.set('Authorization', `Bearer ${auth.access}`);
+        } else {
+          // Convert raw headers object to AxiosHeaders then set
+          const h = new AxiosHeaders(config.headers as AxiosRequestHeaders);
+          h.set('Authorization', `Bearer ${auth.access}`);
+          config.headers = h;
+        }
       }
       return config;
     },
@@ -24,7 +38,16 @@ export function installAuthInterceptors() {
           await auth.refreshTokens();
           if (auth.access) {
             const cfg = error.config! as InternalAxiosRequestConfig;
-            (cfg.headers as any).Authorization = `Bearer ${auth.access}`;
+            if (!cfg.headers) {
+              cfg.headers = new AxiosHeaders();
+            }
+            if (cfg.headers instanceof AxiosHeaders) {
+              cfg.headers.set('Authorization', `Bearer ${auth.access}`);
+            } else {
+              const h = new AxiosHeaders(cfg.headers as AxiosRequestHeaders);
+              h.set('Authorization', `Bearer ${auth.access}`);
+              cfg.headers = h;
+            }
             return client.instance(cfg);
           }
         } catch {

@@ -49,9 +49,12 @@ function doLogout() {
 
 const THEME_KEY = 'fastroom.theme';
 const prefers = window.matchMedia('(prefers-color-scheme: dark)');
-const theme = ref<'light' | 'dark' | 'auto'>(
-  (localStorage.getItem(THEME_KEY) as any) || 'auto',
-);
+const storedTheme = localStorage.getItem(THEME_KEY);
+const initialTheme: 'light' | 'dark' | 'auto' =
+  storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'auto'
+    ? storedTheme
+    : 'auto';
+const theme = ref<'light' | 'dark' | 'auto'>(initialTheme);
 
 function applyTheme(t: 'light' | 'dark' | 'auto') {
   if (t === 'auto') {

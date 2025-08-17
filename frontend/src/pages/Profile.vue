@@ -1,5 +1,5 @@
 <template>
-  <div class="page profile" v-if="auth.user">
+  <div v-if="auth.user" class="page profile">
     <h1>Profile</h1>
     <div class="card">
       <p><strong>Username:</strong> {{ auth.user.username }}</p>
