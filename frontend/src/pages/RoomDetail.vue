@@ -1,7 +1,7 @@
 <template>
   <div class="page room-detail">
     <h1>#{{ roomName }}</h1>
-    <ChatRoom :roomName="roomName" />
+    <ChatRoom :room-name="roomName" />
   </div>
 </template>
 <script setup lang="ts">

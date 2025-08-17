@@ -23,16 +23,13 @@ import {
   listRoomsRoomsGet,
   createRoomRoomsPost,
 } from '../generated/openapiclient/sdk.gen';
-import { useAuthStore } from '../stores/auth';
-const auth = useAuthStore();
-const rooms = ref<any[]>([]);
+import { Room } from '../generated/openapiclient/types.gen';
+const rooms = ref<Room[]>([]);
 const loading = ref(false);
 const newRoom = ref('');
 async function load() {
   loading.value = true;
-  const res = await listRoomsRoomsGet({
-    headers: { Authorization: `Bearer ${auth.access}` },
-  });
+  const res = await listRoomsRoomsGet();
   rooms.value = res.data?.items || [];
   loading.value = false;
 }
@@ -41,8 +38,7 @@ async function createRoom() {
   if (!name) return;
   const res = await createRoomRoomsPost({
     body: { name },
-    headers: { Authorization: `Bearer ${auth.access}` },
-  } as any);
+  });
   rooms.value.unshift(res.data);
   newRoom.value = '';
 }

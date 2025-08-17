@@ -1,10 +1,10 @@
 <template>
   <div class="page auth">
     <h1>Login</h1>
-    <form @submit.prevent="submit" class="card">
+    <form class="card" @submit.prevent="submit">
       <label>Username<input v-model="username" required /></label>
       <label
-        >Password<input type="password" v-model="password" required
+        >Password<input v-model="password" type="password" required
       /></label>
       <button class="btn primary" :disabled="auth.loading">Login</button>
       <p v-if="auth.error" class="err">{{ auth.error }}</p>

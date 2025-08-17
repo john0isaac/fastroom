@@ -22,9 +22,9 @@
               Disconnect
             </button>
           </div>
-          <div class="joined-pill" v-if="joined">#{{ currentRoom }}</div>
+          <div v-if="joined" class="joined-pill">#{{ currentRoom }}</div>
         </div>
-        <div class="panel presence" v-if="joined">
+        <div v-if="joined" class="panel presence">
           <div class="presence-head">Users ({{ users.length }})</div>
           <ul>
             <li v-for="u in users" :key="u" :class="{ self: u === myUsername }">
@@ -39,7 +39,7 @@
         </div>
       </aside>
       <div class="main-pane">
-        <header class="room-bar-top" v-if="joined">
+        <header v-if="joined" class="room-bar-top">
           <h2>#{{ currentRoom }}</h2>
         </header>
         <div v-else class="empty-room-hint">
@@ -59,13 +59,13 @@
 
         <ul
           v-if="joined"
-          class="messages"
           ref="msgList"
+          class="messages"
           @scroll.passive="onScrollMessages"
         >
           <li
             v-for="(m, i) in messages"
-            :key="m.message_id || i"
+            :key="(m as any).message_id || i"
             :class="[
               'msg',
               m.type,
@@ -76,7 +76,9 @@
               <div class="bubble">
                 <div class="meta-row">
                   <span class="user">{{ m.username || m.user }}</span>
-                  <span class="time">{{ ts(m.ts) }}</span>
+                  <span class="time">{{
+                    ts((m as any).ts as string | undefined)
+                  }}</span>
                 </div>
                 <div class="text">{{ m.message }}</div>
               </div>
@@ -109,25 +111,25 @@
         </ul>
         <form
           v-if="joined"
+          ref="composeForm"
           class="compose"
           @submit.prevent="send"
-          ref="composeForm"
         >
           <textarea
             ref="composer"
             v-model="draft"
             placeholder="Message... (Enter to send, Shift+Enter for newline)"
             :disabled="!isOpen"
+            rows="1"
             @keydown.enter="onEnterKey"
             @input="onInputTyping"
-            rows="1"
           />
           <div class="actions">
             <button
               type="button"
               class="btn subtle"
-              @click="clearDraft"
               :disabled="!draft"
+              @click="clearDraft"
             >
               Clear
             </button>
@@ -156,6 +158,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useAuthedWSClient } from '../utils/useAuthedWSClient';
+import type { Envelope } from '../utils/wsClient';
 
 // Base WS endpoint (without auth query param). The backend expects an access_token query param.
 const BASE_WS_URL =
@@ -183,7 +186,8 @@ const joined = computed(() => !!currentRoom.value);
 
 const draft = ref('');
 // Messages newest at TOP of array for simpler prepend of older pages (render reversed via CSS)
-const messages = ref<any[]>([]);
+// Use Envelope (generic WS message shape) for flexible strongly-typed messages.
+const messages = ref<Envelope[]>([]);
 const seenMessageIds = new Set<number>(); // track to avoid duplicate pagination loops
 // Helper to fully reset message history state (e.g. on manual disconnect)
 function resetHistoryState() {
@@ -233,10 +237,49 @@ const authUsername = computed(
 // For highlighting own messages in feed
 const myUsername = authUsername;
 
+// Define a discriminated union of inbound messages we handle to provide type safety.
+type InboundMessage =
+  | { type: 'pong' }
+  | { type: 'joined'; room: string }
+  | { type: 'presence_state'; users: string[] }
+  | { type: 'history'; messages: Envelope[] }
+  | { type: 'history_more'; messages: Envelope[]; more: boolean }
+  | { type: 'presence_diff'; join?: string[]; leave?: string[] }
+  | { type: 'typing'; user: string; isTyping: boolean }
+  | { type: 'error'; message?: string; error?: string }
+  | { type: 'message_updated'; message_id: number; content: string }
+  | { type: 'message_deleted'; message_id: number }
+  | {
+      type: 'member_update';
+      room: string;
+      username: string;
+      is_moderator?: boolean;
+      is_banned?: boolean;
+      is_muted?: boolean;
+    }
+  | ({
+      type: 'system';
+      message?: string;
+      room?: string;
+      message_id?: number;
+      username?: string;
+      user?: string;
+      ts?: string;
+    } & Record<string, unknown>)
+  | ({
+      type: 'chat';
+      message?: string;
+      room?: string;
+      message_id?: number;
+      username?: string;
+      user?: string;
+      ts?: string;
+    } & Record<string, unknown>);
+
 let lastJoinedRoom: string | null = null; // remember for auto rejoin after reconnect
 function joinDefaultRoom() {
   if (joined.value) return;
-  client.send({ type: 'join', room: DEFAULT_ROOM.value } as any);
+  client.send({ type: 'join', room: DEFAULT_ROOM.value } as Envelope);
 }
 
 // Auto-switch when parent passes a new roomName
@@ -246,9 +289,8 @@ function switchRoom(newRoom: string) {
   // Send leave for existing room (if any)
   if (currentRoom.value) {
     try {
-      client.send({ type: 'leave', room: currentRoom.value } as any);
+      client.send({ type: 'leave', room: currentRoom.value } as Envelope);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn('[ChatRoom] failed to send leave', e);
     }
   }
@@ -261,7 +303,7 @@ function switchRoom(newRoom: string) {
   const target = newRoom;
   setTimeout(() => {
     if (connected.value) {
-      client.send({ type: 'join', room: target } as any);
+      client.send({ type: 'join', room: target } as Envelope);
     } else {
       lastJoinedRoom = target; // will auto-join on reconnect/open
     }
@@ -282,7 +324,7 @@ function sendTyping(start: boolean) {
     type: 'typing',
     room: currentRoom.value,
     isTyping: start,
-  } as any);
+  } as Envelope);
 }
 
 function onInputTyping() {
@@ -310,7 +352,6 @@ function send() {
   if (!text || !currentRoom.value || sending.value) return;
   sending.value = true;
   if (import.meta.env.DEV) {
-    // eslint-disable-next-line no-console
     console.debug(
       '[ChatRoom] sending chat while readyState',
       client.readyState?.(),
@@ -318,7 +359,11 @@ function send() {
       client.getReconnectAttempts?.(),
     );
   }
-  client.send({ type: 'chat', room: currentRoom.value, message: text } as any);
+  client.send({
+    type: 'chat',
+    room: currentRoom.value,
+    message: text,
+  } as Envelope);
   draft.value = '';
   autoResize();
   // Clear sending state shortly (simulate ack); then focus once input is enabled
@@ -379,7 +424,7 @@ client.onOpen(() => {
   // Auto rejoin previous room (only if not manually disconnected & user had joined before)
   if (!manualDisconnect.value) {
     if (lastJoinedRoom && !currentRoom.value) {
-      client.send({ type: 'join', room: lastJoinedRoom } as any);
+      client.send({ type: 'join', room: lastJoinedRoom } as Envelope);
       pushToast(`Rejoining #${lastJoinedRoom}…`, 'info', 2500);
     } else if (!currentRoom.value) {
       joinDefaultRoom();
@@ -391,7 +436,7 @@ client.onOpen(() => {
     pushToast('Connected', 'info', 2000);
   }
 });
-client.onClose((ev?: any) => {
+client.onClose((ev?: CloseEvent) => {
   currentRoom.value = null;
   // If closure comes from manual disconnect ensure chat state is cleared.
   if (manualDisconnect.value) {
@@ -412,7 +457,8 @@ client.onReconnecting((attempt, nextDelay) => {
     Math.min(2500, nextDelay + 500),
   );
 });
-client.onJSON((data) => {
+client.onJSON((raw) => {
+  const data = raw as InboundMessage;
   // Basic diagnostic hook (could be gated by dev flag)
   // console.debug('[WS] in', data);
   if (data.type === 'pong') return; // ignore heartbeats
@@ -477,9 +523,9 @@ client.onJSON((data) => {
     if (data.join?.length)
       for (const u of data.join)
         if (!users.value.includes(u)) users.value.push(u);
-    if (data.leave?.length) {
-      users.value = users.value.filter((u) => !data.leave.includes(u));
-      for (const u of data.leave) delete typingUsers.value[u];
+    if (data.leave && data.leave.length) {
+      users.value = users.value.filter((u) => !data.leave!.includes(u));
+      for (const u of data.leave!) delete typingUsers.value[u];
     }
     return;
   }
@@ -567,7 +613,7 @@ onUnmounted(() => {
   manualDisconnect.value = true;
   if (joined.value && currentRoom.value) {
     // Politely inform server we left (optional; server cleans up on close anyway)
-    client.send({ type: 'leave', room: currentRoom.value } as any);
+    client.send({ type: 'leave', room: currentRoom.value } as Envelope);
   }
   client.disconnect();
   teardownHistoryObserver();
@@ -604,7 +650,7 @@ function loadMoreHistory(force = false) {
     type: 'history_more',
     room: currentRoom.value,
     before_id,
-  } as any);
+  } as Envelope);
 }
 
 function ensureHistoryFill() {
