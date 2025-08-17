@@ -4,5 +4,7 @@
         "ms-python.python",
         "charliermarsh.ruff",
         "ms-ossdata.vscode-pgsql",
+        "Vue.volar",
+        "ms-azuretools.vscode-docker"
     ]
 }
