@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+
 from fast_room_api.api import dependencies as deps
 from fast_room_api.models.auth import InvalidToken
 from fast_room_api.models.db import RefreshTokenORM

@@ -1,4 +1,5 @@
 import pytest
+
 from fast_room_api.api.main import app
 
 REFRESH_PATHS = [p for p in ("/refresh", "/auth/refresh") if any(getattr(r, "path", None) == p for r in app.routes)]

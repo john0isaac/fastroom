@@ -23,13 +23,14 @@ import bcrypt
 import httpx
 import pytest
 import pytest_asyncio
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
+
 from fast_room_api.api import dependencies as deps
 from fast_room_api.api.main import app as real_app
 from fast_room_api.models import db as models_db
 from fast_room_api.models.db import Base, UserORM
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
 
 # ---------------------------------------------------------------------------
 # Event loop (pytest-asyncio auto mode may not be enabled in some envs)

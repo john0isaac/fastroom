@@ -1,4 +1,5 @@
 import pytest
+
 from fast_room_api.api.routers.auth import sanitize_username
 
 
