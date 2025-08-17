@@ -4,13 +4,14 @@ set -e
 echo "[post-create] Install UV..."
 if ! command -v uv >/dev/null 2>&1; then
   pip install --upgrade uv
+fi
 
 echo "[post-create] Setting up backend virtual environment with uv..."
 cd ./backend
 if [ ! -d .venv ]; then
   uv venv
 fi
-source .venv/bin/activate
+. .venv/bin/activate
 uv sync
 
 # Run migrations (ignore errors if DB not up yet)
