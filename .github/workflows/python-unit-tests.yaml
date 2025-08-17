@@ -7,6 +7,7 @@ on:
       - "**.py"
       - "frontend/**"
       - "backend/pyproject.toml"
+      - ".github/workflows/python-unit-tests.yaml"
 
   pull_request:
     branches: [ main ]
@@ -14,6 +15,7 @@ on:
       - "**.py"
       - "frontend/**"
       - "backend/pyproject.toml"
+      - ".github/workflows/python-unit-tests.yaml"
 
   workflow_dispatch:
 
@@ -47,11 +49,11 @@ jobs:
         - name: Upload coverage HTML report
           uses: actions/upload-artifact@v4
           with:
-            name: coverage-html
+            name: coverage-html-${{ matrix.python_version }}
             path: backend/htmlcov
         - name: Upload JUnit test report
           if: always()
           uses: actions/upload-artifact@v4
           with:
-            name: junit-test-report
+            name: junit-test-report-${{ matrix.python_version }}
             path: backend/pytest-junit.xml

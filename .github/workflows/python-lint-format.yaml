@@ -4,12 +4,14 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '**.py'
+      - "**.py"
+      - ".github/workflows/python-lint-format.yaml"
 
   pull_request:
     branches: [ main ]
     paths:
-      - '**.py'
+      - "**.py"
+      - ".github/workflows/python-lint-format.yaml"
 
   workflow_dispatch:
 

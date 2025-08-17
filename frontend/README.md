@@ -38,24 +38,24 @@ frontend/
 
 Defined in `.env.development` (auto-loaded by Vite):
 
-| Name | Purpose | Default |
-|------|---------|---------|
+| Name          | Purpose                                        | Default                  |
+| ------------- | ---------------------------------------------- | ------------------------ |
 | `VITE_WS_URL` | Base WebSocket endpoint used by custom clients | `ws://localhost:8000/ws` |
 
 Add production overrides via deployment platform env or a separate `.env.production` (not committed). Any variable prefixed with `VITE_` is exposed to the client bundle.
 
 ## Scripts
 
-| Script | Description |
-|--------|-------------|
-| `yarn dev` | Start Vite dev server with proxy + HMR |
-| `yarn build` | Production build (`dist/`) |
-| `yarn preview` | Preview built assets locally |
+| Script                 | Description                                       |
+| ---------------------- | ------------------------------------------------- |
+| `yarn dev`             | Start Vite dev server with proxy + HMR            |
+| `yarn build`           | Production build (`dist/`)                        |
+| `yarn preview`         | Preview built assets locally                      |
 | `yarn generate:client` | Regenerate OpenAPI TS client from running backend |
-| `yarn lint` | Run ESLint (no fixes) |
-| `yarn lint:fix` | ESLint with fixes |
-| `yarn format` | Prettier write |
-| `yarn format:check` | Prettier check |
+| `yarn lint`            | Run ESLint (no fixes)                             |
+| `yarn lint:fix`        | ESLint with fixes                                 |
+| `yarn format`          | Prettier write                                    |
+| `yarn format:check`    | Prettier check                                    |
 
 ## Development
 
@@ -151,16 +151,16 @@ docker compose up --build web
 `vite.config.ts` proxies:
 
 - `/api` -> `http://localhost:8000`
-- `/ws`  -> `ws://localhost:8000` (WebSocket upgrade)
+- `/ws` -> `ws://localhost:8000` (WebSocket upgrade)
 
 Adjust if backend host/port changes (e.g. container networking).
 
 ## Troubleshooting
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| 404 on API calls | Missing `/api` prefix mismatch | Ensure frontend targets same base path as backend routes |
-| CORS errors | Backend CORS not allowing dev origin | Add `http://localhost:5173` to backend CORS config |
-| WS fails (401) | Cookie not set / auth required | Verify login flow & cookie flags (Secure/SameSite) |
-| Client gen empty | Backend not running | Start backend before `yarn generate:client` |
-| Wrong Node version | Global Node incompatible | `nvm use` or install Node 22.x |
+| Issue              | Cause                                | Fix                                                      |
+| ------------------ | ------------------------------------ | -------------------------------------------------------- |
+| 404 on API calls   | Missing `/api` prefix mismatch       | Ensure frontend targets same base path as backend routes |
+| CORS errors        | Backend CORS not allowing dev origin | Add `http://localhost:5173` to backend CORS config       |
+| WS fails (401)     | Cookie not set / auth required       | Verify login flow & cookie flags (Secure/SameSite)       |
+| Client gen empty   | Backend not running                  | Start backend before `yarn generate:client`              |
+| Wrong Node version | Global Node incompatible             | `nvm use` or install Node 22.x                           |
