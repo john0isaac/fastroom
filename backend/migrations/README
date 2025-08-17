@@ -1,0 +1,8 @@
+Alembic migration environment for FastRoom.
+
+Usage examples:
+  alembic revision --autogenerate -m "your message"
+  alembic upgrade head
+  alembic downgrade -1
+
+The metadata is imported from fast_room_api.models.db:Base

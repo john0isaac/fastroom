@@ -1,0 +1,20 @@
+name: Feature Request
+description: File a quick feature request
+title: "[Feature]: "
+labels: ["feature", "triage"]
+assignees:
+  - john0isaac
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this feature request!
+  - type: textarea
+    id: summary-of-feature
+    attributes:
+      label: Summary Of Feature
+      description: A brief summary of the feature you would like to see
+      placeholder: Describe the feature!
+      value: "A feature would be great!"
+    validations:
+      required: true
