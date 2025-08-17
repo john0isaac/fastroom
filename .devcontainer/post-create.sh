@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd /workspace
+echo "[post-create] Install UV..."
+if ! command -v uv >/dev/null 2>&1; then
+  pip install --upgrade uv
 
 echo "[post-create] Setting up backend virtual environment with uv..."
 cd backend
