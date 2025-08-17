@@ -91,13 +91,11 @@ export class WSClient {
     this.url = url;
     if (reconnect) {
       if (import.meta.env.DEV) {
-
         console.debug('[WSClient] setUrl -> reconnect', url);
       }
       this.disconnect();
       this.connect();
     } else if (import.meta.env.DEV) {
-
       console.debug('[WSClient] setUrl (no immediate reconnect)', url);
     }
   }
@@ -117,7 +115,6 @@ export class WSClient {
 
   private _openSocket() {
     if (import.meta.env.DEV) {
-
       console.debug('[WSClient] opening', this.url);
     }
     this.ws = new WebSocket(this.url);
@@ -163,14 +160,12 @@ export class WSClient {
         this.scheduleReconnect();
       }
       if (import.meta.env.DEV) {
-
         console.debug('[WSClient] closed', ev.code, ev.reason);
       }
     };
     this.ws.onerror = (e) => {
       this.errorListeners.forEach((l) => l(e));
       if (import.meta.env.DEV) {
-
         console.debug('[WSClient] error', e);
       }
     };
