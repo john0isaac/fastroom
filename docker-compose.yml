@@ -1,0 +1,55 @@
+services:
+  api:
+    container_name: fastroom_api
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api
+    command: ["uv", "run", "uvicorn", "fast_room_api.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/fastroom
+    volumes:
+      - ./backend/src/fast_room_api:/app/fast_room_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - postgres
+  web:
+    container_name: fastroom_web
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.web
+    ports:
+      - "5173:80"
+  redis:
+    container_name: fastroom_redis
+    image: redis:8.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  postgres:
+    container_name: fastroom_postgres
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=fastroom
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  redis_data:
+    driver: local
+  pg_data:
+    driver: local

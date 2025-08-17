@@ -1,0 +1,39 @@
+name: Python Linter and Formatter
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**.py"
+      - ".github/workflows/python-lint-format.yaml"
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "**.py"
+      - ".github/workflows/python-lint-format.yaml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+    check-format-lint:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v5
+        - uses: actions/setup-python@v5
+          with:
+                python-version: 3.12
+                cache: 'pip'
+        - name: Install dependencies
+          run: |
+            python3 -m pip install --upgrade pip uv
+            cd backend && uv sync --extra lint
+        - name: Check linting with ruff
+          run: |
+            cd backend && uv run ruff check .
+        - name: Check formatting with ruff
+          run: |
+            cd backend && uv run ruff format --check .

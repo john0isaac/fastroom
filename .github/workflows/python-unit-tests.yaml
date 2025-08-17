@@ -1,0 +1,59 @@
+name: Python Unit tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**.py"
+      - "frontend/**"
+      - "backend/pyproject.toml"
+      - ".github/workflows/python-unit-tests.yaml"
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "**.py"
+      - "frontend/**"
+      - "backend/pyproject.toml"
+      - ".github/workflows/python-unit-tests.yaml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test_package:
+
+    name: Test ${{ matrix.os }} Python ${{ matrix.python_version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        python_version: ["3.11", "3.12"]
+    steps:
+        - uses: actions/checkout@v5
+        - name: Setup python
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ matrix.python_version }}
+            architecture: x64
+        - name: Install dependencies
+          run: |
+            python3 -m pip install --upgrade pip uv
+            cd backend && uv sync --extra test
+        - name: Run tests
+          run: |
+            cd backend && uv run pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing --junitxml=pytest-junit.xml
+        - name: Upload coverage HTML report
+          uses: actions/upload-artifact@v4
+          with:
+            name: coverage-html-${{ matrix.python_version }}
+            path: backend/htmlcov
+        - name: Upload JUnit test report
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: junit-test-report-${{ matrix.python_version }}
+            path: backend/pytest-junit.xml

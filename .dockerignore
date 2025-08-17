@@ -1,0 +1,7 @@
+# General
+.git
+.vscode
+.idea
+**/*.log
+.env
+.env.*

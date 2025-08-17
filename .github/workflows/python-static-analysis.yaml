@@ -1,0 +1,36 @@
+name: Python Static Analysis
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "**.py"
+      - ".github/workflows/python-static-analysis.yaml"
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "**.py"
+      - ".github/workflows/python-static-analysis.yaml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+    check-static-analysis:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v5
+        - uses: actions/setup-python@v5
+          with:
+                python-version: 3.12
+                cache: 'pip'
+        - name: Install dependencies
+          run: |
+            python3 -m pip install --upgrade pip uv
+            cd backend && uv sync --extra dev
+        - name: Check mypy
+          run: |
+            cd backend && uv run mypy .

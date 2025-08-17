@@ -1,0 +1,23 @@
+# develop stage
+FROM python:3.12-slim AS develop-stage
+
+ENV UV_LINK_MODE=copy
+WORKDIR /app
+
+# Install uv
+RUN pip install --no-cache-dir -U pip && pip install --no-cache-dir uv
+
+# Copy project metadata and sync deps
+COPY ./pyproject.toml /app/pyproject.toml
+COPY ./uv.lock /app/uv.lock
+
+# build stage
+FROM develop-stage AS build-stage
+RUN uv sync --no-dev
+
+# Copy app source
+COPY ./src/fast_room_api /app/fast_room_api
+
+# production stage
+FROM build-stage AS production-stage
+EXPOSE 8000
