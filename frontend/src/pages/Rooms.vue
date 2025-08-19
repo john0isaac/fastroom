@@ -39,6 +39,7 @@ async function createRoom() {
   const res = await createRoomRoomsPost({
     body: { name },
   });
+  if (!res.data) return;
   rooms.value.unshift(res.data);
   newRoom.value = '';
 }
