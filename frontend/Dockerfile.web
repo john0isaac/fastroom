@@ -5,6 +5,7 @@ COPY ./package.json /web/package.json
 COPY ./yarn.lock /web/yarn.lock
 COPY ./tsconfig.json ./vite.config.ts /web/
 COPY ./index.html /web/index.html
+COPY ./public /web/public
 RUN yarn install --frozen-lockfile || yarn install
 COPY ./src /web/src
 
