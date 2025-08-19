@@ -1,6 +1,6 @@
 # FastRoom – Real-time Rooms (FastAPI + Vue + Redis + Postgres)
 
-Production-leaning learning project demonstrating a modern realtime stack: authenticated rooms, chat, presence, typing indicators, and a clean separation of concerns between a FastAPI backend and a Vue 3 SPA frontend.
+Project demonstrating a modern realtime stack: authenticated rooms, chat, presence, typing indicators, and a clean separation of concerns between a FastAPI backend and a Vue 3 SPA frontend.
 
 ## Stack Overview
 
@@ -216,4 +216,4 @@ Contributions are welcome! Please follow the guidelines in [`CONTRIBUTING.md`](.
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ---
-Additional deep-dive docs live in: `backend/README.md` and `frontend/README.md`.
+Additional deep-dive docs live in: [`backend/README.md`](./backend/README.md) and [`frontend/README.md`](./frontend/README.md).
