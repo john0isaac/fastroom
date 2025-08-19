@@ -216,4 +216,4 @@ Contributions are welcome! Please follow the guidelines in [`CONTRIBUTING.md`](.
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ---
-Additional deep-dive docs live in: `backend/README.md` and `frontend/README.md`.
+Additional deep-dive docs live in: [`backend/README.md`](./backend/README.md) and [`frontend/README.md`](./frontend/README.md).
