@@ -65,7 +65,7 @@
         >
           <li
             v-for="(m, i) in messages"
-            :key="(m as any).message_id || i"
+            :key="m._k || m.message_id || i"
             :class="[
               'msg',
               m.type,
@@ -76,9 +76,7 @@
               <div class="bubble">
                 <div class="meta-row">
                   <span class="user">{{ m.username || m.user }}</span>
-                  <span class="time">{{
-                    ts((m as any).ts as string | undefined)
-                  }}</span>
+                  <span class="time">{{ ts(m.ts) }}</span>
                 </div>
                 <div class="text">{{ m.message }}</div>
               </div>
@@ -187,7 +185,33 @@ const joined = computed(() => !!currentRoom.value);
 const draft = ref('');
 // Messages newest at TOP of array for simpler prepend of older pages (render reversed via CSS)
 // Use Envelope (generic WS message shape) for flexible strongly-typed messages.
-const messages = ref<Envelope[]>([]);
+// Local message shape used in the chat feed (extends generic Envelope with optional fields)
+interface ChatFeedItem extends Envelope {
+  message_id?: number;
+  username?: string;
+  user?: string;
+  message?: string;
+  ts?: string;
+  edited?: boolean;
+  _k?: number; // internal unique key (becomes non-enumerable only after being processed by tagMessage())
+  type: string; // narrower (system|chat|...) but keep as string for flexibility
+}
+
+const messages = ref<ChatFeedItem[]>([]);
+// Local monotonically increasing sequence to tag each message with a stable, unique key.
+// We avoid using the array index (breaks with unshift) or server message_id (may be absent/duplicated during pagination or reconnect).
+let messageSeq = 0;
+function tagMessage(m: ChatFeedItem): ChatFeedItem {
+  if (m._k == null) {
+    Object.defineProperty(m, '_k', {
+      value: ++messageSeq,
+      enumerable: false, // keep internal; not sent back to server or rendered via v-for spreads
+      configurable: false,
+      writable: false,
+    });
+  }
+  return m;
+}
 const seenMessageIds = new Set<number>(); // track to avoid duplicate pagination loops
 // Helper to fully reset message history state (e.g. on manual disconnect)
 function resetHistoryState() {
@@ -466,11 +490,13 @@ client.onJSON((raw) => {
     currentRoom.value = data.room;
     lastJoinedRoom = data.room; // remember for next reconnect
     // System line should appear as newest (top) so use unshift not push
-    messages.value.unshift({
-      type: 'system',
-      room: data.room,
-      message: 'You joined',
-    });
+    messages.value.unshift(
+      tagMessage({
+        type: 'system',
+        room: data.room,
+        message: 'You joined',
+      }),
+    );
     nextTick(() => composer.value?.focus());
     return;
   }
@@ -486,7 +512,7 @@ client.onJSON((raw) => {
           if (seenMessageIds.has(id)) continue;
           seenMessageIds.add(id);
         }
-        messages.value.unshift(m);
+        messages.value.unshift(tagMessage(m));
       }
     }
     nextTick(() => ensureHistoryFill());
@@ -504,7 +530,7 @@ client.onJSON((raw) => {
           if (seenMessageIds.has(id)) continue; // skip duplicates
           seenMessageIds.add(id);
         }
-        messages.value.push(m);
+        messages.value.push(tagMessage(m));
       }
       nextTick(() => {
         if (list) {
@@ -579,11 +605,13 @@ client.onJSON((raw) => {
       parts.push(data.is_muted ? 'was muted' : 'was unmuted');
     if (parts.length) {
       // Unshift so it appears at top with newest-first semantics
-      messages.value.unshift({
-        type: 'system',
-        room: data.room,
-        message: `${data.username} ${parts.join(', ')}`,
-      });
+      messages.value.unshift(
+        tagMessage({
+          type: 'system',
+          room: data.room,
+          message: `${data.username} ${parts.join(', ')}`,
+        }),
+      );
     }
     return;
   }
@@ -591,9 +619,9 @@ client.onJSON((raw) => {
     const id = data.message_id;
     if (typeof id === 'number' && seenMessageIds.has(id)) return;
     if (typeof id === 'number') seenMessageIds.add(id);
-    messages.value.unshift(data);
+    messages.value.unshift(tagMessage(data));
   } else {
-    messages.value.unshift({ type: 'debug', raw: data });
+    messages.value.unshift(tagMessage({ type: 'debug', raw: data }));
   }
   if (messages.value.length > 500) messages.value.splice(500);
 });
