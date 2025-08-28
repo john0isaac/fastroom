@@ -1,15 +1,26 @@
 <template>
-  <div class="page rooms">
-    <header class="bar">
-      <h1>Rooms</h1>
-      <form class="create" @submit.prevent="createRoom">
-        <input v-model="newRoom" placeholder="new room name" />
-        <button class="btn primary" :disabled="!newRoom.trim()">Create</button>
+  <div class="p-6">
+    <header class="flex items-center gap-6 mb-4">
+      <h1 class="text-2xl font-semibold">Rooms</h1>
+      <form class="flex gap-2" @submit.prevent="createRoom">
+        <input
+          v-model="newRoom"
+          placeholder="new room name"
+          class="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <button
+          class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
+          :disabled="!newRoom.trim()"
+        >
+          Create
+        </button>
       </form>
     </header>
-    <ul class="list">
+    <ul class="list-none p-0 flex flex-col gap-1">
       <li v-for="r in rooms" :key="r.id">
-        <RouterLink :to="{ name: 'room', params: { roomName: r.name } }"
+        <RouterLink
+          class="text-indigo-600 hover:underline"
+          :to="{ name: 'room', params: { roomName: r.name } }"
           >#{{ r.name }}</RouterLink
         >
       </li>
@@ -45,36 +56,3 @@ async function createRoom() {
 }
 onMounted(load);
 </script>
-<style scoped>
-.rooms {
-  padding: 1.5rem;
-}
-.bar {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-.create {
-  display: flex;
-  gap: 0.5rem;
-}
-input {
-  padding: 0.5rem 0.65rem;
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  background: var(--panel);
-  color: var(--text);
-}
-.list {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-a {
-  text-decoration: none;
-  color: var(--accent);
-}
-</style>
