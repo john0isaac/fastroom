@@ -1,6 +1,6 @@
 <template>
-  <div class="page room-detail">
-    <h1>#{{ roomName }}</h1>
+  <div class="p-4">
+    <h1 class="text-2xl font-semibold mb-3">#{{ roomName }}</h1>
     <ChatRoom :room-name="roomName" />
   </div>
 </template>
@@ -11,8 +11,3 @@ import { computed } from 'vue';
 const route = useRoute();
 const roomName = computed(() => route.params.roomName as string);
 </script>
-<style scoped>
-.room-detail {
-  padding: 1rem;
-}
-</style>

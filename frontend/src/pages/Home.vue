@@ -1,20 +1,26 @@
 <template>
-  <div class="page home">
-    <h1 class="logo-heading">
-      <img class="logo" src="/fastroom-logo.svg" alt="FastRoom logo" />
+  <div class="p-6 md:p-8">
+    <h1 class="flex items-center gap-2 text-3xl font-semibold tracking-wide">
+      <img
+        class="h-12 w-12 dark:invert dark:brightness-110"
+        src="/fastroom-logo.svg"
+        alt="FastRoom logo"
+      />
       FastRoom
     </h1>
-    <p>A lightweight realtime chat demo.</p>
-    <div class="actions">
+    <p class="mt-2 text-neutral-600 dark:text-neutral-300">
+      A lightweight realtime chat demo.
+    </p>
+    <div class="mt-5 flex gap-3">
       <RouterLink
         v-if="!auth.isAuthed"
-        class="btn primary"
+        class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         :to="{ name: 'login' }"
         >Get Started</RouterLink
       >
       <RouterLink
         v-if="auth.isAuthed"
-        class="btn primary"
+        class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         :to="{ name: 'rooms' }"
         >Enter Rooms</RouterLink
       >
@@ -25,31 +31,3 @@
 import { useAuthStore } from '../stores/auth';
 const auth = useAuthStore();
 </script>
-<style scoped>
-.home {
-  padding: 2rem 1.5rem;
-}
-.logo-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 2.2rem;
-  letter-spacing: 0.5px;
-}
-.logo {
-  width: 48px;
-  height: 48px;
-}
-.actions {
-  margin-top: 1.25rem;
-  display: flex;
-  gap: 1rem;
-}
-.btn {
-  text-decoration: none;
-  color: var(--accent-fg);
-  background: var(--accent);
-  border-radius: 6px;
-  padding: 0.5rem 0.8rem;
-}
-</style>

@@ -1,16 +1,22 @@
 <template>
-  <div v-if="auth.user" class="page profile">
-    <h1>Profile</h1>
-    <div class="card">
+  <div v-if="auth.user" class="p-6">
+    <h1 class="text-2xl font-semibold mb-4">Profile</h1>
+    <div
+      class="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 text-neutral-900 dark:text-neutral-100"
+    >
       <p><strong>Username:</strong> {{ auth.user.username }}</p>
       <p><strong>Email:</strong> {{ auth.user.email }}</p>
       <p><strong>Full Name:</strong> {{ auth.user.full_name }}</p>
       <p><strong>Active:</strong> {{ auth.user.disabled }}</p>
-      <p><strong>Access Token:</strong> {{ auth.access }}</p>
-      <p><strong>Refresh Token:</strong> {{ auth.refresh }}</p>
+      <p class="break-words">
+        <strong>Access Token:</strong> {{ auth.access }}
+      </p>
+      <p class="break-words">
+        <strong>Refresh Token:</strong> {{ auth.refresh }}
+      </p>
     </div>
   </div>
-  <div v-else class="page"><p>Loading…</p></div>
+  <div v-else class="p-6"><p>Loading…</p></div>
 </template>
 <script setup lang="ts">
 import { useAuthStore } from '../stores/auth';
@@ -19,18 +25,3 @@ if (!auth.user && auth.access) {
   auth.fetchProfile();
 }
 </script>
-<style scoped>
-.profile {
-  padding: 2rem 1.5rem;
-}
-.card {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  padding: 1rem 1.25rem;
-  border-radius: 10px;
-  color: var(--text);
-}
-.card p {
-  word-break: break-word;
-}
-</style>
