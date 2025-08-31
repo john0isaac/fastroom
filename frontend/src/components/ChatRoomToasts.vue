@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  toasts: { id: string; message: string; type: string }[];
-  dismissToast: (id: string) => void;
+  toasts: { id: number; message: string; type: string }[];
+  dismissToast: (id: number) => void;
 }>();
 </script>

@@ -245,7 +245,7 @@ function joinDefaultRoom() {
 // Auto-switch when parent passes a new roomName
 function switchRoom(newRoom: string) {
   if (!newRoom) return;
-  if (currentRoom.value === newRoom) return; // no-op
+  if (currentRoom.value === newRoom) return;
   // Send leave for existing room (if any)
   if (currentRoom.value) {
     try {
@@ -400,7 +400,6 @@ client.onReconnecting((attempt, nextDelay) => {
 client.onJSON((raw) => {
   const data = raw as InboundMessage;
   // Basic diagnostic hook (could be gated by dev flag)
-  // console.debug('[WS] in', data);
   if (data.type === 'pong') return; // ignore heartbeats
   if (data.type === 'joined') {
     currentRoom.value = data.room;
@@ -559,8 +558,6 @@ const statusClass = computed(() =>
     ? 'text-emerald-600 dark:text-emerald-400'
     : 'text-red-600 dark:text-red-400',
 );
-
-// Initial scroll position at top (newest). No auto-scroll needed for reversed layout.
 
 function loadMoreHistory(force = false) {
   if (!currentRoom.value) return;

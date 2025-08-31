@@ -53,7 +53,6 @@
         </div>
       </template>
     </li>
-    <!-- Auto-load sentinel / end-of-history marker (column-reverse so visually top) -->
     <li
       ref="historySentinel"
       :class="[
