@@ -28,7 +28,6 @@ router = APIRouter()
 
 SERVER_ID = os.environ.get("SERVER_ID", uuid.uuid4().hex[:6])
 CHANNEL_PREFIX = "room:"
-# PRESENCE_HASH_PREFIX removed, only heartbeat presence used
 HEARTBEAT_KEY_PREFIX = "presence:hb:"
 HISTORY_LIMIT = 50  # number of recent chat messages to send on join
 HEARTBEAT_INTERVAL = int(os.environ.get("WS_HEARTBEAT_INTERVAL", "25"))  # seconds
@@ -198,9 +197,6 @@ class ConnectionManager:
         hb_key = self._heartbeat_key(room, username, conn_id)
         # IMPORTANT: Set the key immediately (synchronously) so that a subsequent
         # presence_state scan performed right after join already sees this user.
-        # Previously this initial psetex happened only inside the async task, creating
-        # a race where presence_state could be emitted before the key existed, causing
-        # the UI to briefly show 0 users until a refresh/rejoin.
         try:
             await self.redis.psetex(hb_key, HEARTBEAT_TTL_MS, "1")
         except Exception:
@@ -239,8 +235,6 @@ class ConnectionManager:
                 await self.redis.delete(hb_key)
         except Exception:
             logger.debug("failed to delete heartbeat key on stop", exc_info=True)
-
-    # _reconcile_presence_loop and _reconcile_once removed
 
 
 def get_manager(app, redis_client: Redis) -> ConnectionManager:
@@ -360,9 +354,6 @@ async def websocket_endpoint(
                 if first_global:
                     diff_payload = OutPresenceDiff(room=room, join=[user.username]).model_dump(mode="json")
                     # Immediately deliver presence_diff + system line to local peers (excluding the joining socket)
-                    # Previously these were only published to Redis, meaning other users connected to the same
-                    # process would not receive a presence_diff until a rejoin/refresh. This caused the UI user
-                    # list to stay stale. We still publish so other processes receive the events.
                     for peer in list(manager.rooms.get(room, [])):
                         if peer is ws:
                             continue  # joining client already handles its own joined + presence_state
@@ -431,8 +422,6 @@ async def websocket_endpoint(
                 await db.flush()
                 await db.commit()
                 out = OutChatMessage(room=room, user=user.username, message=content, message_id=message_obj.id)
-                # model_dump(mode="json") ensures datetimes are ISO strings. send_json would
-                # handle datetimes, but we also reuse payload for Redis publish (json.dumps).
                 payload = out.model_dump(mode="json")
                 for peer in list(manager.rooms.get(room, [])):
                     try:

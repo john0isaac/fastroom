@@ -1,5 +1,6 @@
 import json
 import logging
+from collections.abc import Awaitable
 
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import asc, desc, func, select
@@ -77,7 +78,6 @@ async def create_room(db: DBSession, current_user: UserDeps, payload: RoomCreate
     room = RoomORM(name=payload.name, is_private=payload.is_private)
     db.add(room)
     await db.flush()
-    # Creator becomes member (owner logic can be added later)
     db.add(RoomMemberORM(room_id=room.id, user_id=current_user.id, is_moderator=True))
     await db.commit()
     await db.refresh(room)
@@ -367,7 +367,9 @@ async def get_room_presence(room_id: int, db: DBSession, redis_client: RedisClie
     from fast_room_api.api.routers.ws import HEARTBEAT_KEY_PREFIX  # local import to avoid cycle
 
     key = HEARTBEAT_KEY_PREFIX + room.name
-    users_map = await redis_client.hgetall(key)
+    users_map: Awaitable[dict] | dict = redis_client.hgetall(key)
+    if isinstance(users_map, Awaitable):
+        users_map = await users_map
     users = sorted(users_map.keys())
     return PresenceState(room_id=room.id, room=room.name, users=users, count=len(users))
 

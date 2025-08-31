@@ -1,4 +1,3 @@
-# Placeholder for dependencies (auth, redis, etc.)
 import hashlib
 import time
 import uuid
@@ -59,7 +58,6 @@ async def persist_refresh_token(
     user_agent: str | None,
     ip: str | None,
 ) -> RefreshTokenORM:
-    # Assumes user exists
     result = await db.execute(select(UserORM).where(UserORM.username == username))
     user = result.scalars().first()
     if not user:

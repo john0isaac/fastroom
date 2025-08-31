@@ -1,6 +1,5 @@
-"""Database setup and ORM models (async SQLAlchemy).
-
-Initial scope: User table for authentication. Extend later with rooms, memberships, messages.
+"""
+Database setup and ORM models (async SQLAlchemy).
 """
 
 from __future__ import annotations
@@ -57,7 +56,6 @@ class RoomMemberORM(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"), index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    # ACL / role fields (simple for now: member/moderator/owner via booleans)
     is_moderator: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_muted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
