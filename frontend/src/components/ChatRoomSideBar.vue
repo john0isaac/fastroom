@@ -65,7 +65,7 @@ defineProps<{
   joined: boolean;
   users: string[];
   myUsername: string;
-  typingUsers: Record<string, boolean>;
+  typingUsers: Record<string, number>;
   currentRoom: string | null;
   statusText: string;
   statusClass: string;
