@@ -46,19 +46,28 @@ async def _get_room(db: AsyncSession, room_id: int) -> RoomORM | None:
 @router.get("/", response_model=RoomsPage)
 async def list_rooms(
     db: DBSession,
+    current_user: UserDeps,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     order: str = Query("desc", pattern="^(asc|desc)$"),
 ):
+    """
+    List all public rooms and private rooms the current user is a member of.
+    """
+    # Public rooms OR private rooms where current user is a member
+    member_room_ids = select(RoomMemberORM.room_id).where(RoomMemberORM.user_id == current_user.id)
+    visibility_filter = RoomORM.is_private.is_(False) | RoomORM.id.in_(member_room_ids)
+
     stmt = (
         select(RoomORM)
+        .where(visibility_filter)
         .order_by(desc(RoomORM.created_at) if order == "desc" else asc(RoomORM.created_at))
         .limit(limit)
         .offset(offset)
     )
     result = await db.execute(stmt)
     items = [Room.model_validate(r) for r in result.scalars().all()]
-    total = (await db.execute(select(func.count()).select_from(RoomORM))).scalar_one()
+    total = (await db.execute(select(func.count()).select_from(RoomORM).where(visibility_filter))).scalar_one()
     next_offset = offset + limit if offset + limit < total else None
     return RoomsPage(
         items=items,
@@ -189,6 +198,8 @@ async def join_room(room_id: int, db: DBSession, current_user: UserDeps):
     room = await _get_room(db, room_id)
     if not room:
         raise HTTPException(status_code=404, detail="room not found")
+    if room.is_private:
+        raise HTTPException(status_code=403, detail="room is private")
     # Check existing membership
     stmt = select(RoomMemberORM).where(RoomMemberORM.room_id == room_id, RoomMemberORM.user_id == current_user.id)
     existing = (await db.execute(stmt)).scalars().first()

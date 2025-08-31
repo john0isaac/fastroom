@@ -249,19 +249,40 @@ async def ensure_room_and_membership(db: AsyncSession, room: str, user: UserORM)
     result = await db.execute(select(RoomORM).where(RoomORM.name == room))
     room_obj = result.scalars().first()
     if not room_obj:
-        room_obj = RoomORM(name=room)
-        db.add(room_obj)
-        await db.flush()
-    # membership (idempotent)
-    result = await db.execute(
-        select(RoomMemberORM).where(
-            RoomMemberORM.room_id == room_obj.id,
-            RoomMemberORM.user_id == user.id,
+        raise ValueError("room not found")
+    # Private rooms require existing membership
+    if room_obj.is_private:
+        member = (
+            (
+                await db.execute(
+                    select(RoomMemberORM).where(
+                        RoomMemberORM.room_id == room_obj.id,
+                        RoomMemberORM.user_id == user.id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
         )
+        if not member:
+            raise PermissionError("room is private")
+        return room_obj
+    # Public room: ensure membership idempotently
+    member = (
+        (
+            await db.execute(
+                select(RoomMemberORM).where(
+                    RoomMemberORM.room_id == room_obj.id,
+                    RoomMemberORM.user_id == user.id,
+                )
+            )
+        )
+        .scalars()
+        .first()
     )
-    if not result.scalars().first():
+    if not member:
         db.add(RoomMemberORM(room_id=room_obj.id, user_id=user.id))
-    await db.commit()
+        await db.commit()
     return room_obj
 
 
@@ -308,7 +329,14 @@ async def websocket_endpoint(
                 if not isinstance(room, str):
                     await ws.send_json({"type": "error", "message": "room required"})
                     continue
-                room_obj = await ensure_room_and_membership(db, room, user)
+                try:
+                    room_obj = await ensure_room_and_membership(db, room, user)
+                except ValueError:
+                    await ws.send_json({"type": "error", "message": "room not found"})
+                    continue
+                except PermissionError:
+                    await ws.send_json({"type": "error", "message": "room is private"})
+                    continue
                 first_global = await manager.join(room, ws, user.username)
                 # explicit join ack for frontend
                 await ws.send_json({"type": "joined", "room": room})
